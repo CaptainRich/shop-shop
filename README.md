@@ -18,7 +18,7 @@ Given
 
 ## Technologies Used
 * The NPM package express
-* React
+* React & React Context API
 * Jest  
 
 ## Shop-Shop Logic

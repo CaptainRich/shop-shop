@@ -22,6 +22,8 @@ const StoreProvider = ({ value = [], ...props }) => {
     return <Provider value={[state, dispatch]} {...props} />;
 };      
 
+
+// A custom 'React' hook
 const useStoreContext = () => {
     return useContext(StoreContext);
   };

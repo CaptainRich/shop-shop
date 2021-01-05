@@ -5,10 +5,17 @@ import { useQuery } from '@apollo/react-hooks';
 
 // Import the action and context Hook functionality
 import { useStoreContext } from "../utils/GlobalState";
-import { UPDATE_PRODUCTS } from "../utils/actions";
+
+import {
+  REMOVE_FROM_CART,
+  UPDATE_CART_QUANTITY,
+  ADD_TO_CART,
+  UPDATE_PRODUCTS,
+} from '../utils/actions';
 
 import { QUERY_PRODUCTS } from "../utils/queries";
 import spinner from '../assets/spinner.gif'
+import Cart from '../components/Cart';
 
 function Detail() {
   // const { id } = useParams();
@@ -44,6 +51,13 @@ useEffect(() => {
   }
 }, [products, data, dispatch, id]);     // the dependency array
 
+const addToCart = () => {
+  dispatch({
+    type: ADD_TO_CART,
+    product: { ...currentProduct, purchaseQuantity: 1 }
+  });
+};
+
   return (
     <>
       {currentProduct ? (
@@ -62,7 +76,7 @@ useEffect(() => {
             <strong>Price:</strong>
             ${currentProduct.price}
             {" "}
-            <button>
+            <button onClick={addToCart}>
               Add to Cart
             </button>
             <button>
@@ -79,6 +93,7 @@ useEffect(() => {
       {
         loading ? <img src={spinner} alt="loading" /> : null
       }
+      <Cart />
     </>
   );
 };

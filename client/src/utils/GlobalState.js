@@ -13,6 +13,8 @@ const { Provider } = StoreContext;         // all 'context' objects have a 'prov
 const StoreProvider = ({ value = [], ...props }) => {
     const [state, dispatch] = useProductReducer({
         products: [],
+        cart: [],
+        cartOpen: false,
         categories: [],
         currentCategory: '',
     });

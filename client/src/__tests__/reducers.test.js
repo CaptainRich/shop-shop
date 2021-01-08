@@ -57,7 +57,7 @@ import {
     expect(newState.categories.length).toBe(2);
     expect(initialState.categories.length).toBe(1);
   });
-
+2
   // Test to see if we can change categories
   test('UPDATE_CURRENT_CATEGORY', () => {
     let newState = reducer(initialState, {

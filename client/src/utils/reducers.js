@@ -3,7 +3,7 @@
 // Import the React hooks needed
 import { useReducer } from 'react';
 
-// Import the define actions
+// Import the defined actions
 import {
     UPDATE_PRODUCTS,
     UPDATE_CATEGORIES,

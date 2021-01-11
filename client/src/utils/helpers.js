@@ -46,7 +46,7 @@ export function idbPromise(storeName, method, object) {
 
       // If there's any errors, this event listener will report it
       db.onerror = function (e) {
-        console.log('error', e);
+        console.log('Error transacting with the local database: ', e);
       };
 
       // Perform the desired action, based on the parameter passed into this function.

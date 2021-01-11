@@ -93,7 +93,7 @@ const Cart = () => {
         );
     }
 
-    console.log(state)
+    // console.log(state)
 
     return (
         <div className="cart">

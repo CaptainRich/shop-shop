@@ -5,7 +5,7 @@ const expiration = '2h';
 
 module.exports = {
   authMiddleware: function ({ req }) {
-    // allows token to be sent via req.body, req.query, or headers
+    // Allows token to be sent via req.body, req.query, or headers
     let token = req.body.token || req.query.token || req.headers.authorization;
 
     // ["Bearer", "<tokenvalue>"]
@@ -16,7 +16,7 @@ module.exports = {
         .trim();
     }
 
-    console.log("token", token)
+    console.log("Token in 'middleware': ", token)
 
 
     if (!token) {
@@ -28,7 +28,7 @@ module.exports = {
       req.user = data;
     }
     catch {
-      console.log('Invalid token');
+      console.log("Invalid token in 'middleware'.");
     }
 
     return req;

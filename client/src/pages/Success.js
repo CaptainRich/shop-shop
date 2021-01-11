@@ -35,8 +35,8 @@ function Success() {
       }
 
       // Redirect back to the hope page after 5 seconds
-      setTimeout(
-        window.location.assign('/'), 5000);
+      setTimeout( () => {
+        window.location.assign('/')}, 5000);
     }
 
     saveOrder();

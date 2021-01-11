@@ -2,6 +2,12 @@ const { AuthenticationError } = require('apollo-server-express');
 const { User, Product, Category, Order } = require('../models');
 const { signToken } = require('../utils/auth');
 
+// Import the 'stripe' package for payment processing
+// For real production work, don't use this test key, instead setup an
+// environment variable: process.env.STRIPE_KEY
+const stripe = require('stripe')('sk_test_4eC39HqLyjWDarjtT1zdp7dc');
+
+
 const resolvers = {
   Query: {
     categories: async () => {
@@ -50,6 +56,49 @@ const resolvers = {
       }
 
       throw new AuthenticationError('Not logged in');
+    },
+
+    checkout: async (parent, args, context) => {
+      const order = new Order({ products: args.products });
+      const { products } = await order.populate('products').execPopulate();
+
+      // To aid in obtaining the referring URL
+      const url = new URL(context.headers.referer).origin;
+
+      const line_items = [];
+
+      // Loop over the the products and get a price ID for each one.
+      for (let i = 0; i < products.length; i++) {
+        // Generate the product id
+        const product = await stripe.products.create({
+          name: products[i].name,
+          description: products[i].description,
+          images: [`${url}/images/${products[i].image}`]
+        });
+
+        // Generate the price id using the product id
+        const price = await stripe.prices.create({
+          product: product.id,
+          unit_amount: products[i].price * 100,      // prices are in cents, not dollars
+          currency: 'usd',
+        });
+
+        // Add  the price id to the line items array
+        line_items.push({
+          price: price.id,
+          quantity: 1
+        });
+      }
+
+      const session = await stripe.checkout.sessions.create({
+        payment_method_types: ['card'],
+        line_items,
+        mode: 'payment',
+        success_url: `${url}/success?session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${url}/`
+      });
+      
+      return { session: session.id };
     }
   },
   Mutation: {

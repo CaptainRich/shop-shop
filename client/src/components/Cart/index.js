@@ -11,10 +11,23 @@ import { TOGGLE_CART, ADD_MULTIPLE_TO_CART } from '../../utils/actions';
 // Import the helper function to deal with the local (off-line) database.
 import { idbPromise } from "../../utils/helpers";
 
+// Import the modules needed for checkout/payment processing
+import { QUERY_CHECKOUT } from '../../utils/queries';
+import { loadStripe } from '@stripe/stripe-js';
+
+// Need this hook to invoke the checkout query when the user clicks 'submit'
+import { useLazyQuery } from '@apollo/react-hooks';
+
+
+// This is a 'test' key only, for Stripe.  This 'promise' performs the checkout redirect.
+const stripePromise = loadStripe('pk_test_TYooMQauvdEDq54NiTphI7jx');
+
+
 
 const Cart = () => {
 
     const [state, dispatch] = useStoreContext();   // establish a 'state' variable from the global store.
+    const [getCheckout, { data }] = useLazyQuery(QUERY_CHECKOUT);
 
     // Check if there is data in the global state, if not retrieve it from local storage (IndexedDB).
     useEffect(() => {
@@ -28,6 +41,16 @@ const Cart = () => {
         }
       }, [state.cart.length, dispatch]);   // The 'state.cart.length' dependency indicates if 'useEffect' runs again. 
 
+    // This hook is for Stripe.
+    useEffect(() => {
+        if (data) {
+          stripePromise.then((res) => {
+            res.redirectToCheckout({ sessionId: data.checkout.session });
+          });
+        }
+      }, [data]);
+      
+
     function toggleCart() {
         dispatch({ type: TOGGLE_CART });           // update the 'state'
     }
@@ -39,6 +62,25 @@ const Cart = () => {
         });
         return sum.toFixed(2);
     }
+
+
+    // This function loops over the items in the cart and puts their IDs into 'productIds' array.
+    function submitCheckout() {
+        const productIds = [];
+      
+        state.cart.forEach((item) => {
+          for (let i = 0; i < item.purchaseQuantity; i++) {
+            productIds.push(item._id);
+          }
+        });
+
+        getCheckout({
+            variables: { products: productIds }
+          });
+      }
+
+
+
 
 
     if (!state.cartOpen) {
@@ -66,7 +108,7 @@ const Cart = () => {
                         <strong>Total: ${calculateTotal()}</strong>
                         {
                             Auth.loggedIn() ?
-                                <button>
+                                <button onClick={submitCheckout}>
                                     Checkout
                                 </button>
                                 :

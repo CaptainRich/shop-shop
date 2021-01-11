@@ -6,6 +6,8 @@ import { pluralize } from "../../utils/helpers"
 import { useStoreContext } from '../../utils/GlobalState';
 import { ADD_TO_CART, UPDATE_CART_QUANTITY } from '../../utils/actions';
 
+// Import the helper function to deal with the local (off-line) database.
+import { idbPromise } from "../../utils/helpers";
 
 
 function ProductItem(item) {
@@ -22,6 +24,8 @@ function ProductItem(item) {
   const { cart } = state;
 
 
+
+// Function to add items to the shopping cart
   const addToCart = () => {
     // Find the cart item with the matching id
     const itemInCart = cart.find((cartItem) => cartItem._id === _id);
@@ -33,11 +37,21 @@ function ProductItem(item) {
         _id: _id,
         purchaseQuantity: parseInt(itemInCart.purchaseQuantity) + 1
       });
+
+      // If updating a quantity, use the existing item data and increment purchaseQuantity value by one in local storage.
+      idbPromise('cart', 'put', {
+        ...itemInCart,
+        purchaseQuantity: parseInt(itemInCart.purchaseQuantity) + 1
+      });        
+
     } else {
       dispatch({
         type: ADD_TO_CART,
         product: { ...item, purchaseQuantity: 1 }
       });
+      
+      // if the product isn't in the cart yet, add it to the current shopping cart in local storage, IndexedDB
+      idbPromise('cart', 'put', { ...item, purchaseQuantity: 1 });
     }
   };
 

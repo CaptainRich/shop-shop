@@ -6,6 +6,10 @@ import { useQuery } from '@apollo/react-hooks';
 // Import the action and context Hook functionality
 import { useStoreContext } from "../utils/GlobalState";
 
+// Import the helper function to deal with the local (off-line) database.
+import { idbPromise } from "../utils/helpers";
+
+
 import {
   REMOVE_FROM_CART,
   UPDATE_CART_QUANTITY,
@@ -42,16 +46,38 @@ const { loading, data } = useQuery(QUERY_PRODUCTS);
 
 
 useEffect(() => {
+
+  // Consider data already in the global store
   if (products.length) {
     setCurrentProduct(products.find(product => product._id === id));   // only if there are products in the global state
-  } else if (data) {
+  } 
+
+  // Or data is retrieved from the server
+  else if (data) {
     dispatch({
       type: UPDATE_PRODUCTS,
       products: data.products
     });
-  }
-}, [products, data, dispatch, id]);     // the dependency array
 
+    // Need to put this in local DB storage also.
+    data.products.forEach((product) => {
+      idbPromise('products', 'put', product);
+    });    
+  }
+
+  // Lastly consider no connection, so retrieve from the local DB
+  else if ( !loading ) {
+    idbPromise('products', 'get').then((indexedProducts) => {
+      dispatch({
+        type: UPDATE_PRODUCTS,
+        products: indexedProducts
+      });
+    });
+  } 
+}, [products, data, loading, dispatch, id]);     // the dependency array
+
+
+// Function to add items to the shopping cart
 const addToCart = () => {
   // Find the cart item with the matching id
   const itemInCart = cart.find((cartItem) => cartItem._id === id);
@@ -63,21 +89,39 @@ const addToCart = () => {
       _id: id,
       purchaseQuantity: parseInt(itemInCart.purchaseQuantity) + 1
     });
+
+    // If updating a quantity, use the existing item data and increment purchaseQuantity value by one in local storage.
+    idbPromise('cart', 'put', {
+      ...itemInCart,
+      purchaseQuantity: parseInt(itemInCart.purchaseQuantity) + 1
+    });  
+
   } else {
     dispatch({
       type: ADD_TO_CART,
       product: { ...currentProduct, purchaseQuantity: 1 }
     });
+
+    // if the product isn't in the cart yet, add it to the current shopping cart in local storage, IndexedDB
+    idbPromise('cart', 'put', { ...currentProduct, purchaseQuantity: 1 });
   }
 };
 
+
+// Function to remove items from the shopping cart.
 const removeFromCart = () => {
   dispatch({
     type: REMOVE_FROM_CART,
     _id: currentProduct._id
   });
+
+  // When removing from the cart, delete the item from IndexedDB using the `currentProduct._id` to locate the right item.
+  idbPromise('cart', 'delete', { ...currentProduct });
+
 };
 
+
+/////////////////////////////////////////////////////////////////////////////////////////
   return (
     <>
       {currentProduct ? (

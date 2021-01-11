@@ -1,17 +1,32 @@
 
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import CartItem from '../CartItem';
 import Auth from '../../utils/auth';
 import './style.css';
 
 import { useStoreContext } from '../../utils/GlobalState';
-import { TOGGLE_CART } from '../../utils/actions';
+import { TOGGLE_CART, ADD_MULTIPLE_TO_CART } from '../../utils/actions';
+
+// Import the helper function to deal with the local (off-line) database.
+import { idbPromise } from "../../utils/helpers";
 
 
 const Cart = () => {
 
     const [state, dispatch] = useStoreContext();   // establish a 'state' variable from the global store.
+
+    // Check if there is data in the global state, if not retrieve it from local storage (IndexedDB).
+    useEffect(() => {
+        async function getCart() {
+          const cart = await idbPromise('cart', 'get');
+          dispatch({ type: ADD_MULTIPLE_TO_CART, products: [...cart] });
+        };
+      
+        if (!state.cart.length) {
+          getCart();
+        }
+      }, [state.cart.length, dispatch]);   // The 'state.cart.length' dependency indicates if 'useEffect' runs again. 
 
     function toggleCart() {
         dispatch({ type: TOGGLE_CART });           // update the 'state'

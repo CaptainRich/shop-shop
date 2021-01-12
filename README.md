@@ -22,6 +22,7 @@ Given
 * Jest  
 
 ## Shop-Shop Logic
-This application 
+This application is deployed on Heroku, using a MongoDB:
+https://shop-shop-ay.herokuapp.com
 
 ## Application Screen Shot and Videos
